@@ -88,25 +88,24 @@ module tinygpu_top (
     wire [7:0]  test_write_data;
     wire        test_write_en;
 
-    fb_test_writer test_writer_inst (
-        .clk       (pixel_clk),
-        .rst       (1'b0),
-        .write_addr(test_write_addr),
-        .write_data(test_write_data),
-        .write_en  (test_write_en)
+    fb_pixel_writer test_writer_inst (
+        .clk        (pixel_clk),
+        .rst        (1'b0),
+        .write_addr (test_write_addr),
+        .write_data (test_write_data),
+        .write_en   (test_write_en)
     );
 
-framebuffer fb_inst (
-    .read_addr (fb_read_addr),
-    .read_clk  (pixel_clk),
-    .read_data (fb_color),
+    framebuffer fb_inst (
+        .read_addr  (fb_read_addr),
+        .read_clk   (pixel_clk),
+        .read_data  (fb_color),
 
     .write_addr(test_write_addr),
     .write_data(test_write_data),
     .write_en  (test_write_en),
     .write_clk (pixel_clk)
 );
-
 
     // ------------------------------------------------------------
     // Delay visible/sync signals by one pixel clock
