@@ -16,31 +16,45 @@ module fb_pixel_writer (
     output reg  [7:0]  write_data;
     output reg         write_en;
 
-    // Chosen test pixel
-    localparam [8:0] PIXEL_X = 9'd160;
-    localparam [7:0] PIXEL_Y = 8'd120;
+    // Draw a visible 32x32 square near the center.
+    localparam [8:0] START_X = 9'd144;
+    localparam [7:0] START_Y = 8'd104;
+    localparam [8:0] SIZE    = 9'd32;
 
-    // RGB332 color
-    localparam [7:0] PIXEL_COLOR = 8'b111_111_11; // white
+    // White in RGB332.
+    localparam [7:0] PIXEL_COLOR = 8'b111_111_11;
 
-    reg done;
+    reg [8:0] dx;
+    reg [7:0] dy;
+
+    wire [8:0] current_x;
+    wire [7:0] current_y;
+
+    assign current_x = START_X + dx;
+    assign current_y = START_Y + dy;
 
     always @(posedge clk) begin
         if (rst) begin
+            dx         <= 9'd0;
+            dy         <= 8'd0;
             write_addr <= 17'd0;
             write_data <= 8'd0;
             write_en   <= 1'b0;
-            done       <= 1'b0;
         end else begin
-            if (!done) begin
-                // addr = y * 320 + x
-                // 320 = 256 + 64
-                write_addr <= (PIXEL_Y << 8) + (PIXEL_Y << 6) + PIXEL_X;
-                write_data <= PIXEL_COLOR;
-                write_en   <= 1'b1;
-                done       <= 1'b1;
+            write_en   <= 1'b1;
+            write_addr <= (current_y << 8) + (current_y << 6) + current_x;
+            write_data <= PIXEL_COLOR;
+
+            if (dx == SIZE - 1) begin
+                dx <= 9'd0;
+
+                if (dy == SIZE - 1) begin
+                    dy <= 8'd0;   // restart square forever
+                end else begin
+                    dy <= dy + 8'd1;
+                end
             end else begin
-                write_en <= 1'b0;
+                dx <= dx + 9'd1;
             end
         end
     end
