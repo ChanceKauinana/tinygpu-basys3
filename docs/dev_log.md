@@ -4,4 +4,6 @@ Day 1:
 # set up Vivado so it can generate bitstreams properly.
 
 Day 2:
-# 
+# Created a framebuffer display instead of the normal VGA display. Converts the display from 640x480 to 320x240. 
+# successfuly displayed color bars on the Basyts 3 vga output. 
+# the display reads from a 8 bit RGB 332 framebuffer and scales it the output. 
