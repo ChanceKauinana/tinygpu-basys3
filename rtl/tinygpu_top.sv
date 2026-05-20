@@ -11,6 +11,7 @@ module tinygpu_top (
     // - `Hsync` and `Vsync` are the horizontal and vertical sync
     //   signals required by the VGA monitor to know frame/line timing.
     clk,
+    btnC,
     vgaRed,
     vgaGreen,
     vgaBlue,
@@ -19,6 +20,8 @@ module tinygpu_top (
 );
 
     input  wire       clk;           // incoming system clock (e.g., 100 MHz)
+    input  wire       btnC;          // center button for scene control 
+
     output reg  [3:0] vgaRed;        // 4-bit red output for VGA
     output reg  [3:0] vgaGreen;      // 4-bit green output for VGA
     output reg  [3:0] vgaBlue;       // 4-bit blue output for VGA
@@ -110,6 +113,51 @@ module tinygpu_top (
 
 
     // ------------------------------------------------------------
+    // Background color selection
+    // This logic turns a single push of the center button into a color
+    // palette change. `bg_index` rotates through eight color choices, and
+    // `bg_color` holds the selected RGB332 value.
+    // ------------------------------------------------------------
+
+    wire bg_button_pulse;
+
+    button_pulse bg_button_inst (
+        .clk       (pixel_clk),
+        .rst       (1'b0),
+        .button_in (btnC),
+        .pulse_out (bg_button_pulse)
+    );
+
+    reg [2:0] bg_index = 3'd0;
+    reg [7:0] bg_color = 8'b000_000_00;
+
+    // Move to the next background color when the button generates a pulse.
+    // `button_pulse` cleans up the raw push-button signal so we only change
+    // colors once per press.
+    always @(posedge pixel_clk) begin
+        if (bg_button_pulse) begin
+            bg_index <= bg_index + 3'd1;
+        end
+    end
+
+    // Convert the palette index into a compact RGB332 background color.
+    // RGB332 means 3 bits red, 3 bits green, and 2 bits blue.
+    always @(*) begin
+        case (bg_index)
+            3'd0: bg_color = 8'b000_000_00; // black
+            3'd1: bg_color = 8'b111_000_00; // red
+            3'd2: bg_color = 8'b000_111_00; // green
+            3'd3: bg_color = 8'b000_000_11; // blue
+            3'd4: bg_color = 8'b111_111_00; // yellow
+            3'd5: bg_color = 8'b111_000_11; // magenta
+            3'd6: bg_color = 8'b000_111_11; // cyan
+            3'd7: bg_color = 8'b111_111_11; // white
+            default: bg_color = 8'b000_000_00;
+        endcase
+    end
+
+
+    // ------------------------------------------------------------
     // Framebuffer memory
     // The framebuffer stores pixel colors. In this design the color is
     // 8 bits wide and encoded as RGB332 (3 bits red, 3 bits green, 2 bits blue).
@@ -122,14 +170,25 @@ module tinygpu_top (
     wire [16:0] test_write_addr;
     wire [7:0]  test_write_data;
     wire        test_write_en;
+    wire        scene_busy;
+    wire        scene_done;
+
+    wire scene_rst;
+    assign scene_rst = bg_button_pulse; // reset scene writer on background color change
 
     // This instance can be replaced with real camera/frame generator logic.
-    fb_pixel_writer test_writer_inst (
+    // For now it writes a test scene into the framebuffer and uses the
+    // selected `bg_color` as the scene background.
+    fb_scene_writer scene_writer_inst (
         .clk        (pixel_clk),
-        .rst        (1'b0),
+        .rst        (scene_rst),
+        .bg_color   (bg_color),       // selected background color
         .write_addr (test_write_addr),
         .write_data (test_write_data),
-        .write_en   (test_write_en)
+        .write_en   (test_write_en),
+
+        .busy       (scene_busy),
+        .done       (scene_done)
     );
 
     // `framebuffer` is a dual-port memory: one port is read by the VGA
