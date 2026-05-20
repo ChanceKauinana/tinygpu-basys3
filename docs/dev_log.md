@@ -1,12 +1,23 @@
-Day 1:
-# began python setup, and setting up porject folder, git/github setup.
-# Wrote the tinygpu top and timing in order to get color bars on the vga screen. (still needs to be tested with real vga).
-# set up Vivado so it can generate bitstreams properly.
+# Development Log
 
-Day 2:
-# Created a framebuffer display instead of the normal VGA display. Converts the display from 640x480 to 320x240. 
-# successfuly displayed color bars on the Basyts 3 vga output. 
-# the display reads from a 8 bit RGB 332 framebuffer and scales it the output. 
+## Day 1
+- Began Python setup and created the project folder.
+- Set up git and GitHub for version control.
+- Wrote `tinygpu_top` and VGA timing modules to drive color bars on the VGA screen. (Still needs testing with real VGA hardware.)
+- Configured Vivado so it can generate bitstreams properly.
 
-Day 3:
-# Today so far, I examined my code a bit more and began to understand how all my modules come together. The FB_puxel writer writes a square of a solid pixel color over the RGB bars that were put on the board from startup from the Framebuffer module. The framebuffer addr module essentially converts the framebuffer into memory. There is a formula in framebuffer addr to place the pixels where they are that is concistent for all of the pixels on the screen. Next, in the vga timing it draws pixels across arow then moves onto the next row. Then it repeats it until it reaches the bottom of the screen. Finally, GPU top connects all these modules together. It recieves a 640x 280 VGA display to the framebuffer, then makes it to a 320x240 display. Then when it outputs, it will scale all the framebuffer pixels up by 2x so then it fits the entire screen.
+## Day 2
+- Built a framebuffer display pipeline instead of using the normal direct VGA output.
+- Converted the display from 640x480 to 320x240 to save memory.
+- Successfully displayed color bars on the Basys3 VGA output.
+- Confirmed that the display reads from an 8-bit RGB332 framebuffer and scales that output to the screen.
+
+## Day 3
+- Reviewed the code and began understanding how all the modules work together.
+- `fb_pixel_writer` draws a solid-color square into the framebuffer on top of the startup color bars.
+- `framebuffer_addr` converts 2D framebuffer coordinates into linear memory addresses, using a formula that keeps pixel placement consistent.
+- `vga_timing` scans pixels across each row, then moves to the next row until it reaches the bottom of the screen.
+- `tinygpu_top` connects these modules, taking 640x480 VGA timing and mapping visible pixels into a 320x240 framebuffer.
+- The output effectively scales framebuffer pixels by 2x so the image fills the VGA screen.
+- Added a button controller that cycles through different background colors.
+- Added a scene writer that can draw different scenes on the VGA display. Currently it draws a red rectangle.
