@@ -1,74 +1,130 @@
-// Top-level module for the Basys 3 tiny GPU demo.
-// This module generates a simple VGA test pattern by
-// instantiating a VGA timing generator and driving
-// the 4-bit VGA RGB outputs and sync signals.
+`timescale 1ns / 1ps
+`default_nettype none
+
 module tinygpu_top (
-    input  logic       clk,       // 100 MHz board clock from the Basys 3
-    output logic [3:0] vgaRed,    // 4-bit red VGA output
-    output logic [3:0] vgaGreen,  // 4-bit green VGA output
-    output logic [3:0] vgaBlue,   // 4-bit blue VGA output
-    output logic       Hsync,     // Horizontal sync output
-    output logic       Vsync      // Vertical sync output
+    clk,
+    vgaRed,
+    vgaGreen,
+    vgaBlue,
+    Hsync,
+    Vsync
 );
 
-    // Basys 3 onboard oscillator is 100 MHz.
-    // 640x480 VGA requires about 25.175 MHz pixel clock.
-    // We use a simple divide-by-4 clock divider to approximate
-    // a 25 MHz pixel clock for this demonstration.
-    logic [1:0] clk_div = 2'b00; // counter for pixel clock division
-    logic       pixel_clk;       // generated pixel clock for VGA timing
+    input  wire       clk;
+    output reg  [3:0] vgaRed;
+    output reg  [3:0] vgaGreen;
+    output reg  [3:0] vgaBlue;
+    output reg        Hsync;
+    output reg        Vsync;
 
-    // Divide the 100 MHz system clock by four.
-    // The MSB of clk_div toggles at 25 MHz when clk is 100 MHz.
-    always_ff @(posedge clk) begin
+    // ------------------------------------------------------------
+    // Clock divider
+    // ------------------------------------------------------------
+
+    reg [1:0] clk_div = 2'b00;
+    wire      pixel_clk;
+
+    always @(posedge clk) begin
         clk_div <= clk_div + 2'b01;
     end
 
-    // Use the MSB of the divider as the pixel clock.
     assign pixel_clk = clk_div[1];
 
-    // VGA timing outputs from the timing generator.
-    logic [9:0] x;       // current pixel X coordinate (horizontal position)
-    logic [9:0] y;       // current pixel Y coordinate (vertical position)
-    logic       visible; // active video region indicator
 
-    // Instantiate the VGA timing generator module.
-    // It produces horizontal and vertical sync pulses,
-    // the current pixel coordinates, and a visible-region flag.
+    // ------------------------------------------------------------
+    // VGA timing signals
+    // ------------------------------------------------------------
+
+    wire [9:0] vga_x;
+    wire [9:0] vga_y;
+    wire       visible_raw;
+    wire       hsync_raw;
+    wire       vsync_raw;
+
     vga_timing timing_inst (
-        .pixel_clk(pixel_clk), // pixel clock input for VGA timing
-        .rst      (1'b0),      // no reset used in this simple demo
-        .x        (x),         // output horizontal pixel position
-        .y        (y),         // output vertical pixel position
-        .visible  (visible),   // output active display region flag
-        .hsync    (Hsync),     // horizontal sync output
-        .vsync    (Vsync)      // vertical sync output
+        .pixel_clk(pixel_clk),
+        .rst      (1'b0),
+        .x        (vga_x),
+        .y        (vga_y),
+        .visible  (visible_raw),
+        .hsync    (hsync_raw),
+        .vsync    (vsync_raw)
     );
 
-    // Generate a simple color bar pattern based on the X coordinate.
-    // The RGB outputs are driven only while the pixel is inside the
-    // visible region; outside the visible area, the outputs remain black.
-    always_comb begin
-        // Default to black for all channels.
+
+    // ------------------------------------------------------------
+    // Convert 640x480 VGA coordinates to 320x240 framebuffer coords
+    // ------------------------------------------------------------
+
+    wire [8:0] fb_x;
+    wire [7:0] fb_y;
+
+    assign fb_x = visible_raw ? vga_x[9:1] : 9'd0;
+    assign fb_y = visible_raw ? vga_y[8:1] : 8'd0;
+
+
+    // ------------------------------------------------------------
+    // Framebuffer address calculation
+    // ------------------------------------------------------------
+
+    wire [16:0] fb_read_addr;
+    wire        fb_coord_valid;
+
+    framebuffer_addr fb_addr_inst (
+        .x    (fb_x),
+        .y    (fb_y),
+        .addr (fb_read_addr),
+        .valid(fb_coord_valid)
+    );
+
+
+    // ------------------------------------------------------------
+    // Framebuffer memory
+    // ------------------------------------------------------------
+
+    wire [7:0] fb_color;
+
+    framebuffer fb_inst (
+        .read_addr (fb_read_addr),
+        .read_clk  (pixel_clk),
+        .read_data (fb_color),
+
+        .write_addr(17'd0),
+        .write_data(8'd0),
+        .write_en  (1'b0),
+        .write_clk (pixel_clk)
+    );
+
+
+    // ------------------------------------------------------------
+    // Delay visible/sync signals by one pixel clock
+    // ------------------------------------------------------------
+
+    reg visible_d;
+
+    always @(posedge pixel_clk) begin
+        visible_d <= visible_raw;
+        Hsync     <= hsync_raw;
+        Vsync     <= vsync_raw;
+    end
+
+
+    // ------------------------------------------------------------
+    // Convert 8-bit RGB332 framebuffer color to 12-bit VGA RGB444
+    // ------------------------------------------------------------
+
+    always @(*) begin
         vgaRed   = 4'h0;
         vgaGreen = 4'h0;
         vgaBlue  = 4'h0;
 
-        if (visible) begin
-            // Divide the visible width into three equal sections:
-            // - Left third: full red
-            // - Middle third: full green
-            // - Right third: full blue
-            // This simple test pattern makes it easy to verify
-            // that the VGA timing and color outputs are working.
-            if (x < 10'd213) begin
-                vgaRed = 4'hF;
-            end else if (x < 10'd426) begin
-                vgaGreen = 4'hF;
-            end else begin
-                vgaBlue = 4'hF;
-            end
+        if (visible_d) begin
+            vgaRed   = {fb_color[7:5], fb_color[7]};
+            vgaGreen = {fb_color[4:2], fb_color[4]};
+            vgaBlue  = {fb_color[1:0], fb_color[1:0]};
         end
     end
 
 endmodule
+
+`default_nettype wire
