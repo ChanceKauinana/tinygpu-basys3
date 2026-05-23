@@ -46,3 +46,19 @@ VGA Controller
         |
         v
 Monitor
+
+Curent features:
+- 640x480 VGA output
+- 320x240 RGB332 framebuffer
+- 2x framebuffer scaling
+- Button-controlled drawing cursor
+- Switch-controlled drawing/background colors
+- Clear/reset drawing
+- LED switch indicators
+
+Nextfeatures:
+- Simulation testbenches
+- Rectangle drawing primitive
+- Line drawing primitive
+- UART command interface
+- Python command sender
