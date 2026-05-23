@@ -56,7 +56,7 @@ Curent features:
 - Clear/reset drawing
 - LED switch indicators
 
-Nextfeatures:
+Next features:
 - Simulation testbenches
 - Rectangle drawing primitive
 - Line drawing primitive

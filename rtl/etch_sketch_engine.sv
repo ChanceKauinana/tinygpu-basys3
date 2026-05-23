@@ -28,9 +28,9 @@ module etch_sketch_engine (
 
     input  wire [7:0]  draw_color;
 
-    output reg  [16:0] write_addr;
-    output reg  [7:0]  write_data;
-    output reg         write_en;
+    output reg  [16:0] write_addr = 17'd0;
+    output reg  [7:0]  write_data = 8'd0;
+    output reg         write_en = 1'b0;
 
     localparam FB_WIDTH  = 320;
     localparam FB_HEIGHT = 240;
@@ -38,13 +38,13 @@ module etch_sketch_engine (
     localparam MODE_DRAW  = 1'b0;
     localparam MODE_CLEAR = 1'b1;
 
-    reg mode;
+    reg mode = MODE_CLEAR;
 
     reg [8:0] cursor_x = 9'd160;
     reg [7:0] cursor_y = 8'd120;
 
-    reg [8:0] clear_x;
-    reg [7:0] clear_y;
+    reg [8:0] clear_x = 9'd0;
+    reg [7:0] clear_y = 8'd0;
 
     // About 25 moves/sec with 25 MHz pixel clock.
     localparam MOVE_DELAY = 20'd1_000_000;

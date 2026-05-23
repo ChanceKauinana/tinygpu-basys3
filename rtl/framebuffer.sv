@@ -6,8 +6,6 @@
 // - Write port: synchronous write clocked by `write_clk`, gated by
 //   `write_en` to update individual pixels.
 // Pixel format: 8-bit RGB332 (R:3, G:3, B:2).
-`timescale 1ns / 1ps
-`default_nettype none
 
 module framebuffer (
     read_clk,
@@ -59,12 +57,13 @@ module framebuffer (
     // This helps quickly verify that the VGA output and framebuffer
     // addressing are functioning before any dynamic writes occur.
     // The pattern: left third red, middle third green, right third blue.
-    initial begin
-        for (init_y = 0; init_y < FB_HEIGHT; init_y = init_y + 1) begin
-            mem[init_addr] = 8'd0; // default to black
+    
+    /* initial begin
+        for (init_addr = 0; init_addr < FB_SIZE; init_addr = init_addr + 1) begin
+            mem[init_addr] = 8'd0; // empty/background
         end
     end
-
+*/
     // -----------------------------------------------------------------
     // Synchronous read port
     // -----------------------------------------------------------------
