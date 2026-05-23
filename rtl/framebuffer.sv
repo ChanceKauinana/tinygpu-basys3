@@ -61,20 +61,7 @@ module framebuffer (
     // The pattern: left third red, middle third green, right third blue.
     initial begin
         for (init_y = 0; init_y < FB_HEIGHT; init_y = init_y + 1) begin
-            for (init_x = 0; init_x < FB_WIDTH; init_x = init_x + 1) begin
-                init_addr = init_y * FB_WIDTH + init_x;
-
-                if (init_x < FB_WIDTH / 3) begin
-                    // RGB332: R=111, G=000, B=00
-                    mem[init_addr] = 8'b111_000_00; // red
-                end else if (init_x < (2 * FB_WIDTH) / 3) begin
-                    // RGB332: R=000, G=111, B=00
-                    mem[init_addr] = 8'b000_111_00; // green
-                end else begin
-                    // RGB332: R=000, G=000, B=11
-                    mem[init_addr] = 8'b000_000_11; // blue
-                end
-            end
+            mem[init_addr] = 8'd0; // default to black
         end
     end
 

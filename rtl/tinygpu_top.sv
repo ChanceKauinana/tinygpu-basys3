@@ -2,25 +2,34 @@
 `default_nettype none
 
 module tinygpu_top (
-    // Top-level module for a tiny GPU that drives a VGA output.
-    // - `clk` is the incoming system clock (fast). We divide this
-    //   down to create a `pixel_clk` used by VGA timing and the
-    //   framebuffer. All visible/video operations run on `pixel_clk`.
-    // - `vgaRed`, `vgaGreen`, `vgaBlue` are the 4-bit color outputs
-    //   sent to the VGA DAC for each pixel (R,G,B each 4 bits -> 12-bit color).
-    // - `Hsync` and `Vsync` are the horizontal and vertical sync
-    //   signals required by the VGA monitor to know frame/line timing.
     clk,
+
+    btnU,
+    btnD,
+    btnL,
+    btnR,
     btnC,
+
+    sw,
+    led,
+
     vgaRed,
     vgaGreen,
     vgaBlue,
     Hsync,
     Vsync
 );
+    input  wire       clk;
 
-    input  wire       clk;           // incoming system clock (e.g., 100 MHz)
-    input  wire       btnC;          // center button for scene control 
+    input  wire       btnU;
+    input  wire       btnD;
+    input  wire       btnL;
+    input  wire       btnR;
+    input  wire       btnC;
+
+    input  wire [15:0] sw;
+    output wire [15:0] led;
+
 
     output reg  [3:0] vgaRed;        // 4-bit red output for VGA
     output reg  [3:0] vgaGreen;      // 4-bit green output for VGA
@@ -28,6 +37,8 @@ module tinygpu_top (
     output reg        Hsync;         // horizontal sync pulse for VGA
     output reg        Vsync;         // vertical sync pulse for VGA
 
+
+    assign led = sw;
     // ------------------------------------------------------------
     // Clock divider
     // We take the incoming `clk` and divide it down by 4 to
@@ -111,85 +122,37 @@ module tinygpu_top (
         .valid(fb_coord_valid)
     );
 
-
-    // ------------------------------------------------------------
-    // Background color selection
-    // This logic turns a single push of the center button into a color
-    // palette change. `bg_index` rotates through eight color choices, and
-    // `bg_color` holds the selected RGB332 value.
-    // ------------------------------------------------------------
-
-    wire bg_button_pulse;
-
-    button_pulse bg_button_inst (
-        .clk       (pixel_clk),
-        .rst       (1'b0),
-        .button_in (btnC),
-        .pulse_out (bg_button_pulse)
-    );
-
-    reg [2:0] bg_index = 3'd0;
-    reg [7:0] bg_color = 8'b000_000_00;
-
-    // Move to the next background color when the button generates a pulse.
-    // `button_pulse` cleans up the raw push-button signal so we only change
-    // colors once per press.
-    always @(posedge pixel_clk) begin
-        if (bg_button_pulse) begin
-            bg_index <= bg_index + 3'd1;
-        end
-    end
-
-    // Convert the palette index into a compact RGB332 background color.
-    // RGB332 means 3 bits red, 3 bits green, and 2 bits blue.
-    always @(*) begin
-        case (bg_index)
-            3'd0: bg_color = 8'b000_000_00; // black
-            3'd1: bg_color = 8'b111_000_00; // red
-            3'd2: bg_color = 8'b000_111_00; // green
-            3'd3: bg_color = 8'b000_000_11; // blue
-            3'd4: bg_color = 8'b111_111_00; // yellow
-            3'd5: bg_color = 8'b111_000_11; // magenta
-            3'd6: bg_color = 8'b000_111_11; // cyan
-            3'd7: bg_color = 8'b111_111_11; // white
-            default: bg_color = 8'b000_000_00;
-        endcase
-    end
-
-
-    // ------------------------------------------------------------
-    // Framebuffer memory
-    // The framebuffer stores pixel colors. In this design the color is
-    // 8 bits wide and encoded as RGB332 (3 bits red, 3 bits green, 2 bits blue).
-    // A separate writer module (`fb_pixel_writer`) can write test patterns
-    // into the framebuffer for demonstrations or debugging.
-    // ------------------------------------------------------------
-
     wire [7:0]  fb_color;
 
-    wire [16:0] test_write_addr;
-    wire [7:0]  test_write_data;
-    wire        test_write_en;
-    wire        scene_busy;
-    wire        scene_done;
+    wire [7:0] bg_color;
+    wire [7:0] display_color;
 
-    wire scene_rst;
-    assign scene_rst = bg_button_pulse; // reset scene writer on background color change
+    assign bg_color = sw[15:8];
 
-    // This instance can be replaced with real camera/frame generator logic.
-    // For now it writes a test scene into the framebuffer and uses the
-    // selected `bg_color` as the scene background.
-    fb_scene_writer scene_writer_inst (
+    assign display_color = (fb_color ==8'd0) ? bg_color : fb_color;
+
+    wire [16:0] draw_write_addr;
+    wire [7:0]  draw_write_data;
+    wire        draw_write_en;
+
+
+    etch_sketch_engine draw_engine_inst (
         .clk        (pixel_clk),
-        .rst        (scene_rst),
-        .bg_color   (bg_color),       // selected background color
-        .write_addr (test_write_addr),
-        .write_data (test_write_data),
-        .write_en   (test_write_en),
+        .rst        (1'b0),
 
-        .busy       (scene_busy),
-        .done       (scene_done)
+        .btnU       (btnU),
+        .btnD       (btnD),
+        .btnL       (btnL),
+        .btnR       (btnR),
+        .btnC       (btnC),
+
+        .draw_color (sw[7:0]),
+
+        .write_addr (draw_write_addr),
+        .write_data (draw_write_data),
+        .write_en   (draw_write_en)
     );
+    
 
     // `framebuffer` is a dual-port memory: one port is read by the VGA
     // pipeline (using `read_addr`/`read_clk`), the other can be written by
@@ -200,9 +163,9 @@ module tinygpu_top (
         .read_clk   (pixel_clk),
         .read_data  (fb_color),
 
-        .write_addr(test_write_addr),
-        .write_data(test_write_data),
-        .write_en  (test_write_en),
+        .write_addr(draw_write_addr),
+        .write_data(draw_write_data),
+        .write_en  (draw_write_en),
         .write_clk (pixel_clk)
     );
 
@@ -242,14 +205,14 @@ module tinygpu_top (
         if (visible_d) begin
             // For red: take 3 bits and repeat the top bit to make 4 bits.
             // Example: R=101 -> {101,1} = 1011
-            vgaRed   = {fb_color[7:5], fb_color[7]};
+            vgaRed   = {display_color[7:5], display_color[7]};
 
             // For green: same idea with bits [4:2]
-            vgaGreen = {fb_color[4:2], fb_color[4]};
+            vgaGreen = {display_color[4:2], display_color[4]};
 
             // For blue: we only have 2 bits; repeat them to fill 4 bits.
             // {b1,b0,b1,b0} gives a reasonable expansion for 2->4 bits.
-            vgaBlue  = {fb_color[1:0], fb_color[1:0]};
+            vgaBlue  = {display_color[1:0], display_color[1:0]};
         end
     end
 
