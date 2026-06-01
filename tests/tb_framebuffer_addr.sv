@@ -1,3 +1,5 @@
+#Successfully compiled and ran the testbench for framebuffer_addr. All test cases passed as expected.
+
 `timescale 1ns / 1ps
 
 module tb_framebuffer_addr;
