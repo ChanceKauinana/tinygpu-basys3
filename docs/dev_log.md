@@ -21,3 +21,22 @@
 - The output effectively scales framebuffer pixels by 2x so the image fills the VGA screen.
 - Added a button controller that cycles through different background colors.
 - Added a scene writer that can draw different scenes on the VGA display. Currently it draws a red rectangle.
+
+## Day 4
+- I missed writing updates for about three days. During that time, I changed the drawing mechanism to work like an etch-a-sketch.
+- Used the Basys3 directional controls to draw a line left, right, up, or down.
+- Added a reset switch to clear the screen and start over.
+- Added board switches for color selection:
+  - the first 7 switches change the background color
+  - the right 8 switches control the line color
+- Combined switch values produce more unique colors.
+- Used the LEDs above the switches to indicate which switches are enabled.
+
+## Day 5
+- Worked on verification for two modules.
+- Tested the framebuffer module in `tb_framebuffer` to verify coordinate-to-address math and report pass/fail.
+- Created `tb_vga_timing` to verify VGA timing behavior:
+  - check reset/start counting
+  - verify horizontal wrap from y = 0 to y = 1
+  - verify visible signal high/low periods
+  - verify HSYNC timing
