@@ -47,7 +47,7 @@ module etch_sketch_engine (
     reg [7:0] clear_y = 8'd0;
 
     // About 25 moves/sec with 25 MHz pixel clock.
-    localparam MOVE_DELAY = 20'd1_000_000;
+    parameter MOVE_DELAY = 20'd1_000_000;
 
     reg [19:0] move_counter = 20'd0;
     wire       move_tick;
