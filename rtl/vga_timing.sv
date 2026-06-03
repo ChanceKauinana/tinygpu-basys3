@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 `default_nettype none
 
 // Module: vga_timing
@@ -5,14 +6,14 @@
 // Inputs: pixel clock, synchronous reset
 // Outputs: x/y coordinates, visible window indicator, hsync/vsync pulses
 module vga_timing (
-    input  logic       pixel_clk,
-    input  logic       rst,
+    input  wire       pixel_clk,
+    input  wire       rst,
 
-    output logic [9:0] x,
-    output logic [9:0] y,
-    output logic       visible,
-    output logic       hsync,
-    output logic       vsync
+    output wire  [9:0] x,
+    output wire  [9:0] y,
+    output wire       visible,
+    output wire       hsync,
+    output wire       vsync
 );
 
     // Horizontal timing constants for 640x480 VGA.
@@ -30,8 +31,8 @@ module vga_timing (
     localparam int V_TOTAL   = 525;
 
     // Counters that sweep through horizontal and vertical timing.
-    logic [9:0] h_count;
-    logic [9:0] v_count;
+    reg [9:0] h_count;
+    reg [9:0] v_count;
 
     // Advance the horizontal counter on each pixel clock. When the end of
     // the line is reached, reset horizontal count and increment the vertical
