@@ -1,4 +1,19 @@
-//Successfully compiled and ran the testbench for framebuffer_addr. All test cases passed as expected.
+// ------------------------------------------------------------
+// Testbench: tb_framebuffer_addr
+// DUT:       framebuffer_addr
+//
+// Purpose:
+//   Verifies conversion from 2D framebuffer coordinates to a
+//   linear framebuffer memory address.
+//
+// Checks:
+//   - Normal coordinates
+//   - Edge coordinates
+//   - Out-of-range valid signal behavior
+//
+// Expected Result:
+//   All checks print PASS in the simulation console.
+// ------------------------------------------------------------
 
 `timescale 1ns / 1ps
 
@@ -40,12 +55,14 @@ module tb_framebuffer_addr;
     initial begin
         $display("Starting framebuffer_addr testbench...");
 
+        // ------------------ Normal / edge coordinates ------------------
         check_addr(9'd0,   8'd0,   17'd0,     1'b1);
         check_addr(9'd1,   8'd0,   17'd1,     1'b1);
         check_addr(9'd0,   8'd1,   17'd320,   1'b1);
         check_addr(9'd160, 8'd120, 17'd38560, 1'b1);
         check_addr(9'd319, 8'd239, 17'd76799, 1'b1);
 
+        // ------------------ Out-of-range coordinates -------------------
         // Out-of-range x
         check_addr(9'd320, 8'd0,   17'd320,   1'b0);
 

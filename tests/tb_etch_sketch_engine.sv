@@ -1,5 +1,22 @@
 `timescale 1ns / 1ps
 
+// ------------------------------------------------------------
+// Testbench: tb_etch_sketch_engine
+// DUT:       etch_sketch_engine
+//
+// Purpose:
+//   Verifies the etch-sketch engine's clear and draw behaviors,
+//   and that button-driven cursor movement results in framebuffer writes.
+//
+// Checks:
+//   - Initial clear after reset
+//   - Draw writes when moving the cursor
+//   - Clear behavior when `btnC` is pressed
+//
+// Expected Result:
+//   PASS messages printed for initial clear, draw writes, and clear writes.
+// ------------------------------------------------------------
+
 module tb_etch_sketch_engine;
     reg clk;
     reg rst;
@@ -54,6 +71,7 @@ module tb_etch_sketch_engine;
         repeat(2) @(posedge clk);
         rst = 1'b0;
 
+        // ------------------ Initial clear check ------------------
         // after reset expect the engine to issue an initial clear to the framebuffer
         @(posedge clk);
         if (write_en == 1'b1 && write_data == 8'h00)
@@ -66,6 +84,7 @@ module tb_etch_sketch_engine;
 
         saw_draw_write = 1'b0;
 
+        // ------------------ Draw-on-move check ------------------
         // drive right button to move the cursor and trigger a draw operation
         btnR = 1'b1;
         for (i = 0; i < 20; i = i + 1) begin
@@ -81,6 +100,7 @@ module tb_etch_sketch_engine;
             $display("FAIL: did not see draw write after btnR press");
         
 
+        // ------------------ Manual clear check ------------------
         // press the clear button and verify the engine clears the framebuffer again
         btnC = 1'b1;
         @(posedge clk);
