@@ -1,13 +1,11 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-// Simple helper module that converts 2D framebuffer coordinates
-// (x,y) into a linear memory address used to index a frame buffer
-// stored in row-major order. This module also reports whether the
-// supplied coordinates lie inside the valid framebuffer rectangle.
-//
-// Why this exists: memories are one-dimensional, but screens are 2D.
-// We need a deterministic mapping from (row, column) -> linear index.
+// Module: framebuffer_addr
+// Purpose: Convert 2D framebuffer coordinates into a linear address
+//          and indicate whether the coordinates are valid.
+// Inputs: framebuffer x/y coordinates
+// Outputs: linear memory address, valid flag
 module framebuffer_addr (
     x,
     y,
@@ -15,19 +13,9 @@ module framebuffer_addr (
     valid
 );
 
-    // Inputs:
-    //  - `x`: horizontal coordinate in framebuffer space (0..FB_WIDTH-1).
-    //         9 bits are used to give room when interfacing with larger
-    //         upstream coordinates (e.g., converted from 640->320 scaling).
-    //  - `y`: vertical coordinate in framebuffer space (0..FB_HEIGHT-1).
-    //         8 bits are sufficient for 240 rows.
     input  wire [8:0]  x;
     input  wire [7:0]  y;
 
-    // Outputs:
-    //  - `addr`: linear address into the framebuffer memory. Width is 17
-    //            bits to comfortably hold all pixel addresses for 320x240.
-    //  - `valid`: high when (x,y) is inside the framebuffer bounds.
     output wire [16:0] addr;
     output wire        valid;
 
@@ -37,16 +25,12 @@ module framebuffer_addr (
     localparam FB_WIDTH  = 320;
     localparam FB_HEIGHT = 240;
 
-    // We will do arithmetic in a wider bit-width to avoid overflow when
-    // shifting/adding. `addr` is 17 bits so extend `x` and `y` to 17 bits
-    // before performing multiplication (via shifts) and addition.
+    // Compute row-major framebuffer addresses without a multiplier.
     wire [16:0] x_ext;
     wire [16:0] y_ext;
 
-    // Zero-extend the smaller input vectors into the wider working width.
-    // Example: if x=9'b000101101 then x_ext becomes 17'b00000000_000101101.
-    assign x_ext = {8'b0, x}; // extend `x` (9 bits -> 17 bits)
-    assign y_ext = {9'b0, y}; // extend `y` (8 bits -> 17 bits)
+    assign x_ext = {8'b0, x};
+    assign y_ext = {9'b0, y};
 
     // `valid` tells the caller whether the supplied coordinates are within
     // the framebuffer area. This prevents accidental reads outside memory

@@ -1,5 +1,9 @@
 `timescale 1ns / 1ps
 
+// Module: etch_sketch_engine
+// Purpose: Controls cursor movement and framebuffer writes for Etch-a-Sketch mode.
+// Inputs: buttons for direction/clear, draw color
+// Outputs: framebuffer write address/data/enable
 module etch_sketch_engine (
     clk,
     rst,
@@ -46,7 +50,7 @@ module etch_sketch_engine (
     reg [8:0] clear_x = 9'd0;
     reg [7:0] clear_y = 8'd0;
 
-    // About 25 moves/sec with 25 MHz pixel clock.
+    // Move delay creates a human-friendly cursor speed on the pixel clock.
     parameter MOVE_DELAY = 20'd1_000_000;
 
     reg [19:0] move_counter = 20'd0;
@@ -57,12 +61,10 @@ module etch_sketch_engine (
     always @(posedge clk) begin
         if (rst) begin
             move_counter <= 20'd0;
+        end else if (move_tick) begin
+            move_counter <= 20'd0;
         end else begin
-            if (move_tick) begin
-                move_counter <= 20'd0;
-            end else begin
-                move_counter <= move_counter + 20'd1;
-            end
+            move_counter <= move_counter + 20'd1;
         end
     end
 
@@ -83,10 +85,10 @@ module etch_sketch_engine (
             write_en <= 1'b0;
 
             if (mode == MODE_CLEAR) begin
-                // Clear one framebuffer pixel per clock.
+                // In clear mode, write zero to each framebuffer pixel sequentially.
                 write_en   <= 1'b1;
                 write_addr <= (clear_y << 8) + (clear_y << 6) + clear_x;
-                write_data <= 8'b000_000_00; // empty/background
+                write_data <= 8'b000_000_00;
 
                 if (clear_x == FB_WIDTH - 1) begin
                     clear_x <= 9'd0;
@@ -104,7 +106,7 @@ module etch_sketch_engine (
                 end
 
             end else begin
-                // btnC clears the drawing.
+                // Clear command transitions the engine back into clear mode.
                 if (btnC) begin
                     mode    <= MODE_CLEAR;
                     clear_x <= 9'd0;
@@ -123,7 +125,7 @@ module etch_sketch_engine (
                     write_addr <= (cursor_y << 8) + (cursor_y << 6) + cursor_x;
 
                     if (draw_color == 8'd0) begin
-                        write_data <= 8'b111_111_11; // default white
+                        write_data <= 8'b111_111_11;
                     end else begin
                         write_data <= draw_color;
                     end

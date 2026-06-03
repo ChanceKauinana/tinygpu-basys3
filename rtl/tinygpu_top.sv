@@ -1,6 +1,11 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
+// Module: tinygpu_top
+// Purpose: Top-level GPU system that connects VGA timing, framebuffer memory,
+//          and the etch-sketch drawing engine.
+// Inputs: system clock, direction/clear buttons, switch-based background and draw color
+// Outputs: VGA RGB signals, Hsync/Vsync, LED status
 module tinygpu_top (
     clk,
 
@@ -31,28 +36,21 @@ module tinygpu_top (
     output wire [15:0] led;
 
 
-    output reg  [3:0] vgaRed;        // 4-bit red output for VGA
-    output reg  [3:0] vgaGreen;      // 4-bit green output for VGA
-    output reg  [3:0] vgaBlue;       // 4-bit blue output for VGA
-    output reg        Hsync;         // horizontal sync pulse for VGA
-    output reg        Vsync;         // vertical sync pulse for VGA
+    output reg  [3:0] vgaRed;
+    output reg  [3:0] vgaGreen;
+    output reg  [3:0] vgaBlue;
+    output reg        Hsync;
+    output reg        Vsync;
 
 
     assign led = sw;
-    // ------------------------------------------------------------
-    // Clock divider
-    // We take the incoming `clk` and divide it down by 4 to
-    // generate a `pixel_clk`. The VGA timing module expects a
-    // pixel clock that steps once per visible pixel; dividing the
-    // system clock lets us match that rate.
-    // ------------------------------------------------------------
 
-    reg [1:0] clk_div = 2'b00; // small counter to divide clock by 4
-    wire      pixel_clk;       // lower-speed clock used for pixels
+    // Clock divider generates the pixel clock from the incoming system clock.
+    // The VGA timing module requires a pixel-rate clock, so the top-level
+    // divides the system clock by four and uses the MSB of the counter.
+    reg [1:0] clk_div = 2'b00;
+    wire      pixel_clk;
 
-    // Simple binary counter clock divider. Every rising edge increments
-    // `clk_div`. The MSB (`clk_div[1]`) toggles once for every four
-    // input clock cycles, producing our pixel clock.
     always @(posedge clk) begin
         clk_div <= clk_div + 2'b01;
     end
@@ -85,21 +83,12 @@ module tinygpu_top (
     );
 
 
-    // ------------------------------------------------------------
-    // Convert 640x480 VGA coordinates to 320x240 framebuffer coords
-    // The physical VGA signal is 640x480. Our framebuffer stores a smaller
-    // image at 320x240 to save memory. We convert coordinates by dropping
-    // the least significant bit (i.e., dividing by 2) when the pixel is
-    // within the visible area. Outside the visible area we set coords to 0.
-    // ------------------------------------------------------------
-
+    // Convert 640x480 VGA coordinates into 320x240 framebuffer coordinates.
+    // The framebuffer is half resolution in each dimension, so the visible
+    // VGA coordinates are scaled down by discarding the LSBs.
     wire [8:0] fb_x;
     wire [7:0] fb_y;
 
-    // Use the raw visible signal to gate coordinate conversion so that
-    // we only request framebuffer pixels when the monitor is actually
-    // displaying them. `vga_x[9:1]` and `vga_y[8:1]` perform the divide
-    // by two needed to convert from 640x480 -> 320x240.
     assign fb_x = visible_raw ? vga_x[9:1] : 9'd0;
     assign fb_y = visible_raw ? vga_y[8:1] : 8'd0;
 
@@ -155,9 +144,8 @@ module tinygpu_top (
     
 
     // `framebuffer` is a dual-port memory: one port is read by the VGA
-    // pipeline (using `read_addr`/`read_clk`), the other can be written by
-    // a writer (here `test_writer_inst`). The read data `fb_color` is the
-    // 8-bit RGB332 pixel value we will convert to VGA levels.
+    // pipeline, while the other accepts writes from the drawing engine.
+    // The read path provides an 8-bit RGB332 pixel value for display.
     framebuffer fb_inst (
         .read_addr  (fb_read_addr),
         .read_clk   (pixel_clk),
