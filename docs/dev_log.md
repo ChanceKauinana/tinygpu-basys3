@@ -22,7 +22,7 @@
 - Added a button controller that cycles through different background colors.
 - Added a scene writer that can draw different scenes on the VGA display. Currently it draws a red rectangle.
 
-## Day 4
+## Day 4 - 7
 - I missed writing updates for about three days. During that time, I changed the drawing mechanism to work like an etch-a-sketch.
 - Used the Basys3 directional controls to draw a line left, right, up, or down.
 - Added a reset switch to clear the screen and start over.
@@ -32,7 +32,7 @@
 - Combined switch values produce more unique colors.
 - Used the LEDs above the switches to indicate which switches are enabled.
 
-## Day 5
+## Day 8 - 11
 - Worked on verification for two modules.
 - Tested the framebuffer module in `tb_framebuffer` to verify coordinate-to-address math and report pass/fail.
 - Created `tb_vga_timing` to verify VGA timing behavior:
@@ -40,3 +40,14 @@
   - verify horizontal wrap from y = 0 to y = 1
   - verify visible signal high/low periods
   - verify HSYNC timing
+- Added `tb_etch_sketch_engine` to verify the etch-a-sketch controller:
+  - check initial screen clear after reset
+  - verify cursor movement writes draw pixels to the framebuffer
+  - verify manual clear triggers a framebuffer reset write
+
+## Day 12 - 13
+- Cleaned up code formatting and comments, including module descriptions and removal of unnecessary annotations.
+- Organized Git/GitHub work to keep the repository tidy.
+- Verified the design still worked after cleanup.
+- Fixed small bugs and removed redundant code.
+
