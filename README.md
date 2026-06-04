@@ -6,7 +6,9 @@ The goal of this project is to practice FPGA RTL design, VGA timing, framebuffer
 
 ## Demo
 
-Demo video/GIF: Coming SOON
+Demo video: (media/tinygpu-demo-v1.mp4)
+
+(<video src="media/tinygpu-demo-v1 (1).mp4" controls width="700"></video>)
 
 ## Features
 
