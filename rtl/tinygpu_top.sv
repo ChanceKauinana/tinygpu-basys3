@@ -118,7 +118,7 @@ module tinygpu_top (
 
     assign bg_color = sw[15:8];
 
-    assign display_color = (fb_color ==8'd0) ? bg_color : fb_color;
+    assign display_color = (fb_color == 8'd0) ? bg_color : fb_color;
 
     wire [16:0] draw_write_addr;
     wire [7:0]  draw_write_data;
@@ -151,10 +151,10 @@ module tinygpu_top (
         .read_clk   (pixel_clk),
         .read_data  (fb_color),
 
-        .write_addr(draw_write_addr),
-        .write_data(draw_write_data),
-        .write_en  (draw_write_en),
-        .write_clk (pixel_clk)
+        .write_addr (draw_write_addr),
+        .write_data (draw_write_data),
+        .write_en   (draw_write_en),
+        .write_clk  (pixel_clk)
     );
 
     // ------------------------------------------------------------

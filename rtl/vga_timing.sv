@@ -17,18 +17,18 @@ module vga_timing (
 );
 
     // Horizontal timing constants for 640x480 VGA.
-    localparam int H_VISIBLE = 640;
-    localparam int H_FRONT   = 16;
-    localparam int H_SYNC    = 96;
-    localparam int H_BACK    = 48;
-    localparam int H_TOTAL   = 800;
+    localparam  H_VISIBLE = 640;
+    localparam  H_FRONT   = 16;
+    localparam  H_SYNC    = 96;
+    localparam  H_BACK    = 48;
+    localparam  H_TOTAL   = 800;
 
     // Vertical timing constants for 640x480 VGA.
-    localparam int V_VISIBLE = 480;
-    localparam int V_FRONT   = 10;
-    localparam int V_SYNC    = 2;
-    localparam int V_BACK    = 33;
-    localparam int V_TOTAL   = 525;
+    localparam  V_VISIBLE = 480;
+    localparam  V_FRONT   = 10;
+    localparam  V_SYNC    = 2;
+    localparam  V_BACK    = 33;
+    localparam  V_TOTAL   = 525;
 
     // Counters that sweep through horizontal and vertical timing.
     reg [9:0] h_count;
@@ -37,7 +37,7 @@ module vga_timing (
     // Advance the horizontal counter on each pixel clock. When the end of
     // the line is reached, reset horizontal count and increment the vertical
     // counter to the next scanline.
-    always_ff @(posedge pixel_clk) begin
+    always @(posedge pixel_clk) begin
         if (rst) begin
             h_count <= 10'd0;
             v_count <= 10'd0;

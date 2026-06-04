@@ -34,16 +34,6 @@ module framebuffer (
     (* ram_style = "block" *)
     reg [7:0] mem [0:FB_SIZE-1];
 
-    integer init_x;
-    integer init_y;
-    integer init_addr;
-
-    /* initial begin
-        for (init_addr = 0; init_addr < FB_SIZE; init_addr = init_addr + 1) begin
-            mem[init_addr] = 8'd0;
-        end
-    end
-*/
     // Synchronous read port with out-of-range protection.
     always @(posedge read_clk) begin
         if (read_addr < FB_SIZE) begin

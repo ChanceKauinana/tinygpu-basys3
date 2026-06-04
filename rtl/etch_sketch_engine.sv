@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`default_nettype none
 
 // Module: etch_sketch_engine
 // Purpose: Controls cursor movement and framebuffer writes for Etch-a-Sketch mode.
@@ -137,3 +138,5 @@ module etch_sketch_engine (
     end
 
 endmodule
+
+`default_nettype wire
