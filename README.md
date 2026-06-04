@@ -6,10 +6,9 @@ The goal of this project is to practice FPGA RTL design, VGA timing, framebuffer
 
 ## Demo
 
-Demo video: (media/tinygpu-demo-v1.mp4)
+[Download/watch v1.0 demo video](media/tinygpu-demo-v1.mp4)
 
-(<video src="media/tinygpu-demo-v1 (1).mp4" controls width="700"></video>)
-
+This demo shows the Basys 3 generating VGA output, switch-controlled draw/background colors, button-controlled Etch-a-Sketch drawing, LED switch indicators, and clear-screen behavior.
 ## Features
 
 - 640x480 VGA output
