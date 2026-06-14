@@ -19,7 +19,9 @@ module etch_sketch_engine (
 
     write_addr,
     write_data,
-    write_en
+    write_en,
+    cursor_x_out,
+    cursor_y_out
 );
 
     input  wire        clk;
@@ -36,6 +38,9 @@ module etch_sketch_engine (
     output reg  [16:0] write_addr = 17'd0;
     output reg  [7:0]  write_data = 8'd0;
     output reg         write_en = 1'b0;
+
+    output wire [8:0] cursor_x_out;
+    output wire [7:0] cursor_y_out;
 
     localparam FB_WIDTH  = 320;
     localparam FB_HEIGHT = 240;
@@ -58,6 +63,10 @@ module etch_sketch_engine (
     wire       move_tick;
 
     assign move_tick = (move_counter == MOVE_DELAY - 1);
+
+    assign cursor_x_out = cursor_x;
+    assign cursor_y_out = cursor_y;
+    
 
     always @(posedge clk) begin
         if (rst) begin

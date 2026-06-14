@@ -42,6 +42,9 @@ module tinygpu_top (
     output reg        Hsync;
     output reg        Vsync;
 
+    wire [8:0] cursor_x;
+    wire [7:0] cursor_y;
+
 
     assign led = sw;
 
@@ -111,14 +114,31 @@ module tinygpu_top (
         .valid(fb_coord_valid)
     );
 
+    wire cursor_x_match;
+    wire cursor_y_match;
+    wire cursor_on;
+
+    assign cursor_x_match = (fb_x >= cursor_x && fb_x <= cursor_x + 9'd1) ||
+                            (fb_x <= cursor_x && fb_x + 9'd1 >= cursor_x);
+    assign cursor_y_match = (fb_y >= cursor_y && fb_y <= cursor_y + 8'd1) ||
+                            (fb_y <= cursor_y && fb_y + 8'd1 >= cursor_y);
+
+    assign cursor_on = visible_raw && cursor_x_match && cursor_y_match;
+
     wire [7:0]  fb_color;
 
     wire [7:0] bg_color;
     wire [7:0] display_color;
 
+    wire [7:0] base_color;
+
     assign bg_color = sw[15:8];
 
-    assign display_color = (fb_color == 8'd0) ? bg_color : fb_color;
+    assign base_color = (fb_color == 8'd0) ? bg_color : fb_color;
+
+    wire [7:0] cursor_color;
+    assign cursor_color = (sw[7:0] == 8'd0)? 8'b11111111 : sw[7:0];
+    assign display_color = cursor_on ? cursor_color : base_color;
 
     wire [16:0] draw_write_addr;
     wire [7:0]  draw_write_data;
@@ -167,9 +187,6 @@ module tinygpu_top (
         .btnC_pulse (butnC_pulse)
     );
 
-
-
-
     etch_sketch_engine draw_engine_inst (
         .clk        (pixel_clk),
         .rst        (1'b0),
@@ -184,7 +201,10 @@ module tinygpu_top (
 
         .write_addr (draw_write_addr),
         .write_data (draw_write_data),
-        .write_en   (draw_write_en)
+        .write_en   (draw_write_en),
+
+        .cursor_x_out(cursor_x),
+        .cursor_y_out(cursor_y)
     );
     
 
