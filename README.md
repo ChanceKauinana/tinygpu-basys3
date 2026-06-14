@@ -104,7 +104,7 @@ All testbenches are located in the `tests/` directory.
 
 ## Future Work
 
-- Version 2.0 will be worked on shortly!
+- Version 2.0 in progress
 
 - Add button debouncing
 - Add a proper 25 MHz clocking wizard/MMCM pixel clock

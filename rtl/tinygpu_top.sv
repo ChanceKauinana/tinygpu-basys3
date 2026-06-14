@@ -124,8 +124,27 @@ module tinygpu_top (
     wire [7:0]  draw_write_data;
     wire        draw_write_en;
 
+// ------------------------------------------------------------
+// Button debouncing and pulse generation
+// Mechanical buttons can produce noisy signals when pressed or released,
+// causing multiple transitions instead of a clean single press. The
+// `button_pulse` module takes a raw button input and produces a clean,
+// debounced signal (`button_clean`) and a one-clock-cycle pulse (`pulse_out`)
+// whenever a new button press is detected.
+// ------------------------------------------------------------ 
+    wire butnU_clean;
+    wire butnD_clean;
+    wire butnL_clean;
+    wire butnR_clean;
+    wire butnC_clean;
 
-    etch_sketch_engine draw_engine_inst (
+    wire butnU_pulse;
+    wire butnD_pulse;
+    wire butnL_pulse;
+    wire butnR_pulse;
+    wire butnC_pulse;
+
+    button_inputs button_inputs_inst (
         .clk        (pixel_clk),
         .rst        (1'b0),
 
@@ -134,6 +153,32 @@ module tinygpu_top (
         .btnL       (btnL),
         .btnR       (btnR),
         .btnC       (btnC),
+
+        .btnU_clean (butnU_clean),
+        .btnD_clean (butnD_clean),
+        .btnL_clean (butnL_clean),
+        .btnR_clean (butnR_clean),
+        .btnC_clean (butnC_clean),
+
+        .btnU_pulse (butnU_pulse),
+        .btnD_pulse (butnD_pulse),
+        .btnL_pulse (butnL_pulse),
+        .btnR_pulse (butnR_pulse),
+        .btnC_pulse (butnC_pulse)
+    );
+
+
+
+
+    etch_sketch_engine draw_engine_inst (
+        .clk        (pixel_clk),
+        .rst        (1'b0),
+
+        .btnU       (butnU_clean),
+        .btnD       (butnD_clean),
+        .btnL       (butnL_clean),
+        .btnR       (butnR_clean),
+        .btnC       (butnC_pulse),
 
         .draw_color (sw[7:0]),
 
