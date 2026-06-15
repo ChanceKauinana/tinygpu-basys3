@@ -48,17 +48,18 @@ module tinygpu_top (
 
     assign led = sw;
 
-    // Clock divider generates the pixel clock from the incoming system clock.
-    // The VGA timing module requires a pixel-rate clock, so the top-level
-    // divides the system clock by four and uses the MSB of the counter.
-    reg [1:0] clk_div = 2'b00;
-    wire      pixel_clk;
+    wire pixel_clk;
+    wire clk_locked;
+    wire sys_rst;
+    
+    assign sys_rst = 1'b0;
 
-    always @(posedge clk) begin
-        clk_div <= clk_div + 2'b01;
-    end
-
-    assign pixel_clk = clk_div[1];
+    clk_wiz_0 clk_wiz_inst (
+        .clk_out1 (pixel_clk),
+        .reset    (sys_rst),
+        .locked   (clk_locked),
+        .clk_in1  (clk)
+    );
 
 
     // ------------------------------------------------------------
@@ -77,7 +78,7 @@ module tinygpu_top (
 
     vga_timing timing_inst (
         .pixel_clk(pixel_clk),
-        .rst      (1'b0),
+        .rst      (sys_rst),
         .x        (vga_x),
         .y        (vga_y),
         .visible  (visible_raw),
@@ -166,7 +167,7 @@ module tinygpu_top (
 
     button_inputs button_inputs_inst (
         .clk        (pixel_clk),
-        .rst        (1'b0),
+        .rst        (sys_rst),
 
         .btnU       (btnU),
         .btnD       (btnD),
@@ -189,7 +190,7 @@ module tinygpu_top (
 
     etch_sketch_engine draw_engine_inst (
         .clk        (pixel_clk),
-        .rst        (1'b0),
+        .rst        (sys_rst),
 
         .btnU       (butnU_clean),
         .btnD       (butnD_clean),

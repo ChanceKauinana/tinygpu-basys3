@@ -1,4 +1,4 @@
-# TinyGPU-Basys3: FPGA VGA Drawing Engine (V1.0)
+# TinyGPU-Basys3: FPGA VGA Drawing Engine
 
 TinyGPU-Basys3 is an FPGA graphics project built for the Digilent Basys 3 Artix-7 board. The design generates 640x480 VGA output from a 320x240 RGB332 framebuffer and supports an interactive Etch-a-Sketch drawing mode using the board's push buttons and switches.
 
@@ -9,6 +9,12 @@ The goal of this project is to practice FPGA RTL design, VGA timing, framebuffer
 [Watch v1.0 Demo Video Here](https://youtu.be/XUvRm200iu8)
 
 This demo shows the Basys 3 generating VGA output, switch-controlled draw/background colors, button-controlled Etch-a-Sketch drawing, LED switch indicators, and clear-screen behavior.
+
+## Versions
+
+- **v1.0** — Initial VGA framebuffer drawing engine with Etch-a-Sketch controls, switch-controlled draw/background colors, LED switch indicators, clear-screen behavior, and simulation testbenches.
+- **v2.0** — In progress: added debounced button inputs and a color-matched on-screen cursor overlay.
+
 ## Features
 
 - 640x480 VGA output
@@ -21,6 +27,9 @@ This demo shows the Basys 3 generating VGA output, switch-controlled draw/backgr
 - Center button clear/reset behavior
 - LEDs mirror switch states for debugging
 - Simulation testbenches for core modules
+- Debounced button inputs `v2.0`
+- Color-matched on-screen cursor overlay `v2.0`
+- Clocking Wozard generates VGA pixel clock `v2.0`
 
 ## Hardware / Tools
 
@@ -43,6 +52,9 @@ Empty framebuffer pixels use value `8'd0`. The top-level display logic treats th
 Buttons / Switches
         |
         v
+Debounced Button Inputs
+        |
+        v
 Etch-a-Sketch Engine
         |
         v
@@ -53,6 +65,9 @@ Framebuffer Write Port
         |
         v
 Framebuffer Read Port
+        |
+        v
+Cursor Overlay + Background Selection
         |
         v
 RGB332 to RGB444 Conversion
@@ -99,16 +114,9 @@ All testbenches are located in the `tests/` directory.
 
 - The design uses a single framebuffer, so reads and writes may occur during the same display frame.
 - The framebuffer uses `8'd0` as the transparent/background value, so true black drawing is not supported in the current version.
-- Button inputs are not fully debounced.
-- The pixel clock is generated using a simple clock divider instead of a dedicated clocking wizard/MMCM.
 
 ## Future Work
 
-- Version 2.0 in progress
-
-- Add button debouncing
-- Add a proper 25 MHz clocking wizard/MMCM pixel clock
-- Add an on-screen cursor indicator
 - Add line or rectangle drawing primitives
 - Add UART command input
 - Add more complete verification and assertions
