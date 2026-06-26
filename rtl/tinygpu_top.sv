@@ -15,6 +15,8 @@ module tinygpu_top (
     btnR,
     btnC,
 
+    uart_rx_pin,
+
     sw,
     led,
 
@@ -32,6 +34,8 @@ module tinygpu_top (
     input  wire       btnR;
     input  wire       btnC;
 
+    input wire       uart_rx_pin;
+
     input  wire [15:0] sw;
     output wire [15:0] led;
 
@@ -45,8 +49,8 @@ module tinygpu_top (
     wire [8:0] cursor_x;
     wire [7:0] cursor_y;
 
-
-    assign led = sw;
+//COME BACK AND FIX LATER::: TESTING UART RN
+    //assign led = sw;
 
     wire pixel_clk;
     wire clk_locked;
@@ -61,6 +65,28 @@ module tinygpu_top (
         .clk_in1  (clk)
     );
 
+
+    wire [7:0] uart_data;
+    wire       uart_valid;
+
+    reg [7:0] uart_led_data = 8'd0;
+
+    uart_rx uart_rx_inst (
+        .clk      (clk),
+        .rst      (1'b0),
+        .rx       (uart_rx_pin),
+        .rx_data  (uart_data),
+        .rx_valid (uart_valid)
+    );
+
+    always @(posedge clk) begin
+        if (uart_valid) begin
+            uart_led_data <= uart_data;
+        end
+    end
+
+    assign led[7:0]  = uart_led_data;
+    assign led[15:8] = sw[15:8];
 
     // ------------------------------------------------------------
     // VGA timing signals
