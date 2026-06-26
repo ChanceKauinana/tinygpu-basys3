@@ -49,8 +49,7 @@ module tinygpu_top (
     wire [8:0] cursor_x;
     wire [7:0] cursor_y;
 
-//COME BACK AND FIX LATER::: TESTING UART RN
-    //assign led = sw;
+    assign led = sw;
 
     wire pixel_clk;
     wire clk_locked;
@@ -78,15 +77,6 @@ module tinygpu_top (
         .rx_data  (uart_data),
         .rx_valid (uart_valid)
     );
-
-    always @(posedge clk) begin
-        if (uart_valid) begin
-            uart_led_data <= uart_data;
-        end
-    end
-
-    assign led[7:0]  = uart_led_data;
-    assign led[15:8] = sw[15:8];
 
     // ------------------------------------------------------------
     // VGA timing signals
@@ -171,6 +161,55 @@ module tinygpu_top (
     wire [7:0]  draw_write_data;
     wire        draw_write_en;
 
+
+    wire uart_btnU;
+    wire uart_btnD;
+    wire uart_btnL;
+    wire uart_btnR;
+    wire uart_btnC;
+
+    uart_control uart_control_inst (
+        .clk        (clk),
+        .rst        (sys_rst),
+
+        .rx_data  (uart_data),
+        .rx_valid (uart_valid),
+
+        .uart_btnU       (uart_btnU),
+        .uart_btnD       (uart_btnD),
+        .uart_btnL       (uart_btnL),
+        .uart_btnR       (uart_btnR),
+        .uart_btnC       (uart_btnC)
+    );
+
+    wire uart_btnU_pix;
+    wire uart_btnD_pix;
+    wire uart_btnL_pix;
+    wire uart_btnR_pix;
+    wire uart_btnC_pix;
+
+    uart_command_sync uart_command_sync_inst (
+        .clk_uart      (clk),
+        .rst_uart      (1'b0),
+
+        .clk_pixel     (pixel_clk),
+        .rst_pixel     (1'b0),
+
+        .uart_btnU     (uart_btnU),
+        .uart_btnD     (uart_btnD),
+        .uart_btnL     (uart_btnL),
+        .uart_btnR     (uart_btnR),
+        .uart_btnC     (uart_btnC),
+
+        .uart_btnU_pix (uart_btnU_pix),
+        .uart_btnD_pix (uart_btnD_pix),
+        .uart_btnL_pix (uart_btnL_pix),
+        .uart_btnR_pix (uart_btnR_pix),
+        .uart_btnC_pix (uart_btnC_pix)
+    );
+
+
+
 // ------------------------------------------------------------
 // Button debouncing and pulse generation
 // Mechanical buttons can produce noisy signals when pressed or released,
@@ -214,15 +253,28 @@ module tinygpu_top (
         .btnC_pulse (butnC_pulse)
     );
 
+    //combined button signals from uart and physical buttons
+    wire cmd_btnU;
+    wire cmd_btnD;
+    wire cmd_btnL;
+    wire cmd_btnR;
+    wire cmd_btnC;
+
+    assign cmd_btnU = butnU_clean | uart_btnU_pix;
+    assign cmd_btnD = butnD_clean | uart_btnD_pix;
+    assign cmd_btnL = butnL_clean | uart_btnL_pix;
+    assign cmd_btnR = butnR_clean | uart_btnR_pix;
+    assign cmd_btnC = butnC_clean | uart_btnC_pix;
+
     etch_sketch_engine draw_engine_inst (
         .clk        (pixel_clk),
         .rst        (sys_rst),
 
-        .btnU       (butnU_clean),
-        .btnD       (butnD_clean),
-        .btnL       (butnL_clean),
-        .btnR       (butnR_clean),
-        .btnC       (butnC_pulse),
+        .btnU       (cmd_btnU),
+        .btnD       (cmd_btnD),
+        .btnL       (cmd_btnL),
+        .btnR       (cmd_btnR),
+        .btnC       (cmd_btnC),
 
         .draw_color (sw[7:0]),
 
