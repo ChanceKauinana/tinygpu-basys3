@@ -53,6 +53,11 @@ module etch_sketch_engine (
     reg [8:0] cursor_x = 9'd160;
     reg [7:0] cursor_y = 8'd120;
 
+    reg pending_U = 1'b0;
+    reg pending_D = 1'b0;
+    reg pending_L = 1'b0;
+    reg pending_R = 1'b0;
+
     reg [8:0] clear_x = 9'd0;
     reg [7:0] clear_y = 8'd0;
 
@@ -84,6 +89,11 @@ module etch_sketch_engine (
 
             cursor_x   <= 9'd160;
             cursor_y   <= 8'd120;
+
+            pending_U  <= 1'b0;
+            pending_D  <= 1'b0;
+            pending_L  <= 1'b0;
+            pending_R  <= 1'b0;
 
             clear_x    <= 9'd0;
             clear_y    <= 8'd0;
@@ -121,26 +131,50 @@ module etch_sketch_engine (
                     mode    <= MODE_CLEAR;
                     clear_x <= 9'd0;
                     clear_y <= 8'd0;
-                end else if (move_tick) begin
-                    if (btnU && cursor_y > 0) begin
-                        cursor_y <= cursor_y - 8'd1;
-                    end else if (btnD && cursor_y < FB_HEIGHT - 1) begin
-                        cursor_y <= cursor_y + 8'd1;
-                    end else if (btnL && cursor_x > 0) begin
-                        cursor_x <= cursor_x - 9'd1;
-                    end else if (btnR && cursor_x < FB_WIDTH - 1) begin
-                        cursor_x <= cursor_x + 9'd1;
+                    pending_U <= 1'b0;
+                    pending_D <= 1'b0;
+                    pending_L <= 1'b0;
+                    pending_R <= 1'b0;
+                end else begin
+                    if (btnU) begin
+                        pending_U <= 1'b1;
                     end
-
-                    write_addr <= (cursor_y << 8) + (cursor_y << 6) + cursor_x;
-
-                    if (draw_color == 8'd0) begin
-                        write_data <= 8'b111_111_11;
-                    end else begin
-                        write_data <= draw_color;
+                    if (btnD) begin
+                        pending_D <= 1'b1;
                     end
+                    if (btnL) begin
+                        pending_L <= 1'b1;
+                    end
+                    if (btnR) begin
+                        pending_R <= 1'b1;
+                    end
+                
+                    if (move_tick) begin
+                        if ((pending_U || btnU) && cursor_y > 0) begin
+                            cursor_y <= cursor_y - 8'd1;
+                        end else if ((pending_D || btnD) && cursor_y < FB_HEIGHT - 1) begin
+                            cursor_y <= cursor_y + 8'd1;
+                        end else if ((pending_L || btnL) && cursor_x > 0) begin
+                            cursor_x <= cursor_x - 9'd1;
+                        end else if ((pending_R || btnR) && cursor_x < FB_WIDTH - 1) begin
+                            cursor_x <= cursor_x + 9'd1;
+                        end
 
-                    write_en <= 1'b1;
+                        pending_U <= 1'b0;
+                        pending_D <= 1'b0;
+                        pending_L <= 1'b0;
+                        pending_R <= 1'b0;
+
+                        write_addr <= (cursor_y << 8) + (cursor_y << 6) + cursor_x;
+
+                        if (draw_color == 8'd0) begin
+                            write_data <= 8'b111_111_11;
+                        end else begin
+                            write_data <= draw_color;
+                        end
+
+                        write_en <= 1'b1;
+                    end
                 end
             end
         end

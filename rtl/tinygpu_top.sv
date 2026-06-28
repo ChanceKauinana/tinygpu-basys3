@@ -264,7 +264,7 @@ module tinygpu_top (
     assign cmd_btnD = butnD_clean | uart_btnD_pix;
     assign cmd_btnL = butnL_clean | uart_btnL_pix;
     assign cmd_btnR = butnR_clean | uart_btnR_pix;
-    assign cmd_btnC = butnC_clean | uart_btnC_pix;
+    assign cmd_btnC = butnC_pulse | uart_btnC_pix;
 
     etch_sketch_engine draw_engine_inst (
         .clk        (pixel_clk),

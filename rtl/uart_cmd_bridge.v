@@ -21,9 +21,9 @@ module uart_cmd_bridge (
 
     reg toggle_uart;
 
-    reg toggle_sync_0;
-    reg toggle_sync_1;
-    reg toggle_sync_2;
+    (* ASYNC_REG = "TRUE" *) reg toggle_sync_0;
+    (* ASYNC_REG = "TRUE" *) reg toggle_sync_1;
+    (* ASYNC_REG = "TRUE" *) reg toggle_sync_2;
 
     always @(posedge clk_uart) begin
         if (rst_uart) begin

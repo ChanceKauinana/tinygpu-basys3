@@ -136,7 +136,14 @@ set_property -dict { PACKAGE_PIN R19   IOSTANDARD LVCMOS33 } [get_ports Vsync]
 set_property -dict { PACKAGE_PIN B18   IOSTANDARD LVCMOS33 } [get_ports uart_rx_pin]
 #set_property -dict { PACKAGE_PIN A18   IOSTANDARD LVCMOS33 } [get_ports RsTx]
 
+# UART command CDC: 100 MHz system/UART clock to 25 MHz pixel clock.
+# toggle_uart is in the sys_clk_pin domain.
+# toggle_sync_0 is the first pixel-clock synchronizer flop.
+# This crossing is intentionally asynchronous.
 
+set_false_path -from [get_pins -hierarchical *toggle_uart_reg*/C] \
+               -to   [get_pins -hierarchical *toggle_sync_0_reg*/D]
+               
 ##USB HID (PS/2)
 #set_property -dict { PACKAGE_PIN C17   IOSTANDARD LVCMOS33   PULLUP true } [get_ports PS2Clk]
 #set_property -dict { PACKAGE_PIN B17   IOSTANDARD LVCMOS33   PULLUP true } [get_ports PS2Data]
